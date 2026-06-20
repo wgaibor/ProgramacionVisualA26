@@ -1,0 +1,47 @@
+package com.veterinaria;
+
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.TextField;
+
+public class VeterinariaController {
+
+    @FXML
+    private TextField txtMascota;
+
+    @FXML
+    private TextField txtTipo;
+
+    @FXML
+    private TextField txtRaza;
+
+    @FXML
+    private TextField txtEdad;
+
+    @FXML
+    private TextField txtDueno;
+
+    @FXML
+    private TextField txtMotivo;
+
+    @FXML
+    private void registrar() {
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Registro");
+        alert.setHeaderText(null);
+        alert.setContentText("La visita del paciente fue registrada correctamente.");
+        alert.showAndWait();
+    }
+
+    @FXML
+    private void limpiar() {
+
+        txtMascota.clear();
+        txtTipo.clear();
+        txtRaza.clear();
+        txtEdad.clear();
+        txtDueno.clear();
+        txtMotivo.clear();
+    }
+}
