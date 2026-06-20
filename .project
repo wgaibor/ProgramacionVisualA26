@@ -1,0 +1,44 @@
+.root {
+    -fx-background-color: #f4f6f8;
+}
+
+.titulo {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-background-color: #0f5c5c;
+    -fx-padding: 10px 20px;
+}
+
+.label {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.text-field {
+    -fx-background-color: white;
+    -fx-border-color: #b0bec5;
+    -fx-border-width: 2px;
+}
+
+.btnRegistrar {
+    -fx-background-color: #0b7a6d;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.btnRegistrar:hover {
+    -fx-background-color: #095d53;
+}
+
+.btnLimpiar {
+    -fx-background-color: #8fa2b2;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.btnLimpiar:hover {
+    -fx-background-color: #728392;
+}
