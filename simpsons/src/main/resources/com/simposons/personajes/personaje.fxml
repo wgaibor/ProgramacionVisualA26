@@ -78,9 +78,9 @@
                 </padding>
             </HBox>
 
-            <ScrollPane >
+            <ScrollPane fx:id="scrollPane" fitToWidth="true" >
                 <content>
-                    <FlowPane styleClass="main-scroll" >
+                    <FlowPane fx:id="charactersContainer"  styleClass="main-scroll" >
                         <padding>
                             <Insets left="30.0" right="30.0" top="30.0" bottom='30.0' />
                         </padding>

@@ -1,2 +1,6 @@
-com\simposons\personajes\PersonajeController.class
 com\simposons\personajes\App.class
+com\simposons\personajes\model\SimpsonsResponse.class
+com\simposons\personajes\PersonajeController$1.class
+com\simposons\personajes\PersonajeController.class
+com\simposons\personajes\service\SimpsonsService.class
+com\simposons\personajes\model\Personaje.class
