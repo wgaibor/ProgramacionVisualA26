@@ -1,11 +1,16 @@
 package com.simposons.personajes;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import com.simposons.personajes.model.Personaje;
 import com.simposons.personajes.model.SimpsonsResponse;
@@ -13,6 +18,7 @@ import com.simposons.personajes.service.SimpsonsService;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -23,6 +29,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+
+
 
 public class PersonajeController {
 
@@ -229,6 +237,7 @@ public class PersonajeController {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    // MÉTODO COMPLETO - NO MODIFICAR
     private ImageView createCharacterImage(Personaje character) {
         ImageView imageView = new ImageView();
         imageView.setFitHeight(180);
@@ -236,73 +245,167 @@ public class PersonajeController {
         imageView.setPreserveRatio(true);
         imageView.setSmooth(true);
         imageView.setCache(true);
-
-        if(character.getPortrait_path() != null && !character.getPortrait_path().isEmpty()) {
-            // El portrait_path viene como "/character/X.webp" desde la api
+        
+        if (character.getPortrait_path() != null && !character.getPortrait_path().isEmpty()) {
+            // El portrait_path viene como "/character/X.webp" desde la API
             String portraitPathTemp = character.getPortrait_path().trim();
-
+            
             // Asegurar que empiece con "/"
-            if(!portraitPathTemp.startsWith("/")) {
+            if (!portraitPathTemp.startsWith("/")) {
                 portraitPathTemp = "/" + portraitPathTemp;
             }
-
-            // Crear constantes para usar en lambdas
-            final String BASE_URL_IMAGE = "https://cdn.thesimpsonsapi.com/200";
-            String urlImageDownload = BASE_URL_IMAGE + portraitPathTemp;
-
+            
+            // Crear variable final para usar en lambdas
+            final String portraitPath = portraitPathTemp;
+            final String imageUrl = "https://cdn.thesimpsonsapi.com/200" + portraitPath;
+            
+            System.out.println("📸 Cargando imagen para: " + character.getName());
+            System.out.println("   URL: " + imageUrl);
+            System.out.println("   Portrait path original: " + character.getPortrait_path());
+            
             // PRIMERO: Intentar carga directa con JavaFX Image (más simple)
-            Image directImage = new Image(urlImageDownload, true);
+            Image directImage = new Image(imageUrl, true);
             imageView.setImage(directImage);
-
+            
             // Monitorear si la carga directa funciona
             directImage.progressProperty().addListener((obs, oldProgress, newProgress) -> {
-                if(newProgress.doubleValue() == 1.0) {
-                    if(directImage.isError()) {
+                if (newProgress.doubleValue() == 1.0) {
+                    if (!directImage.isError()) {
+                        System.out.println("✅ Carga directa exitosa para: " + character.getName());
+                    } else {
                         System.out.println("⚠️ Carga directa falló, intentando descarga manual para: " + character.getName());
-                        downLoadAndLoadImage(imageView, urlImageDownload, portraitPathTemp, character);
+                        downloadAndLoadImage(imageView, imageUrl, portraitPath, character.getName());
                     }
                 }
             });
-
+            
+            directImage.errorProperty().addListener((obs, wasError, isNowError) -> {
+                if (isNowError) {
+                    System.out.println("⚠️ Error en carga directa, intentando descarga manual para: " + character.getName());
+                    downloadAndLoadImage(imageView, imageUrl, portraitPath, character.getName());
+                }
+            });
+        } else {
+            System.out.println("⚠️ No hay portrait_path para: " + character.getName());
         }
+        
         return imageView;
     }
 
-    private void downLoadAndLoadImage(ImageView imageView, String urlImageDownload, String portraitPathTemp, Personaje character) {
+    // MÉTODO COMPLETO - NO MODIFICAR
+    private void downloadAndLoadImage(ImageView imageView, String primaryUrl, String portraitPath, String characterName) {
         HttpClient client = HttpClient.newBuilder()
-                                .connectTimeout(Duration.ofSeconds(15))
-                                .build();
+                .connectTimeout(Duration.ofSeconds(15))
+                .build();
+        
+        // URLs a intentar en orden
         final String[] urls = {
-            urlImageDownload,
-            "https://cdn.thesimpsonsapi.com/200" + portraitPathTemp
+            primaryUrl,
+            "https://cdn.thesimpsonsapi.com/200" + portraitPath,
+            "https://cdn.thesimpsonsapi.com" + portraitPath
         };
-
-        downLoadImageBytes(client, imageView, urls, 0, character);
+        
+        downloadImageBytes(client, imageView, urls, 0, characterName);
     }
 
-    private void downLoadImageBytes(HttpClient client, ImageView imageView, String[] urls, int index, Personaje character) {
-        if(index >= urls.length) {
-            System.err.println("❌ No se pudo cargar imagen para: " + character.getName() + " después de " + urls.length + " intentos");
+    // MÉTODO COMPLETO - NO MODIFICAR
+    private void downloadImageBytes(HttpClient client, ImageView imageView, String[] urls, int index, String characterName) {
+        if (index >= urls.length) {
+            System.err.println("❌ No se pudo cargar imagen para: " + characterName + " después de " + urls.length + " intentos");
             Platform.runLater(() -> {
+                // Mostrar placeholder visual
                 imageView.setStyle("-fx-background-color: rgba(255,255,255,0.2); -fx-background-radius: 90;");
             });
             return;
         }
+        
         final String url = urls[index];
+        System.out.println("🔄 Intento " + (index + 1) + " para " + characterName + ": " + url);
+        
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                                    .uri(URI.create(url))
-                                    .GET()
-                                    .timeout(Duration.ofSeconds(15))
-                                    .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                                    .header("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
-                                    .header("Accept-Language", "en-US,en;q=0.9")
-                                    .header("Referer", "https://thesimpsonsapi.com/")
-                                    .header("Origin", "https://thesimpsonsapi.com")
-                                    .header("Cache-Control", "no-cache")
-                                    .build();
+                    .uri(URI.create(url))
+                    .GET()
+                    .timeout(Duration.ofSeconds(15))
+                    .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .header("Referer", "https://thesimpsonsapi.com/")
+                    .header("Origin", "https://thesimpsonsapi.com")
+                    .header("Cache-Control", "no-cache")
+                    .build();
+            
+            client.sendAsync(request, HttpResponse.BodyHandlers.ofByteArray())
+                .thenAccept(response -> {
+                    System.out.println("📥 Respuesta HTTP " + response.statusCode() + " para " + characterName);
+                    
+                    if (response.statusCode() == 200) {
+                        byte[] imageBytes = response.body();
+                        System.out.println("📦 Bytes descargados: " + (imageBytes != null ? imageBytes.length : 0) + " para " + characterName);
+                        
+                        if (imageBytes != null && imageBytes.length > 0) {
+                            // Verificar que es una imagen válida (WebP empieza con RIFF)
+                            if (imageBytes.length >= 4) {
+                                String header = new String(imageBytes, 0, Math.min(4, imageBytes.length));
+                                System.out.println("🔍 Header de imagen: " + bytesToHex(imageBytes, 0, 4) + " para " + characterName);
+                            }
+                            
+                            Platform.runLater(() -> {
+                                try {
+                                    // Leer imagen WebP usando ImageIO con soporte de TwelveMonkeys
+                                    ByteArrayInputStream bais = new ByteArrayInputStream(imageBytes);
+                                    BufferedImage bufferedImage = ImageIO.read(bais);
+                                    
+                                    if (bufferedImage != null) {
+                                        // Convertir BufferedImage a JavaFX Image
+                                        Image fxImage = SwingFXUtils.toFXImage(bufferedImage, null);
+                                        
+                                        // Establecer imagen en ImageView
+                                        imageView.setImage(fxImage);
+                                        System.out.println("✅ Imagen WebP cargada exitosamente para: " + characterName);
+                                    } else {
+                                        System.err.println("❌ No se pudo leer imagen WebP para: " + characterName);
+                                        if (index + 1 < urls.length) {
+                                            downloadImageBytes(client, imageView, urls, index + 1, characterName);
+                                        }
+                                    }
+                                    
+                                } catch (Exception e) {
+                                    System.err.println("❌ Excepción procesando imagen WebP para " + characterName + ": " + e.getMessage());
+                                    e.printStackTrace();
+                                    if (index + 1 < urls.length) {
+                                        downloadImageBytes(client, imageView, urls, index + 1, characterName);
+                                    }
+                                }
+                            });
+                        } else {
+                            System.err.println("❌ Imagen vacía o nula desde: " + url);
+                            downloadImageBytes(client, imageView, urls, index + 1, characterName);
+                        }
+                    } else {
+                        System.err.println("❌ HTTP " + response.statusCode() + " desde: " + url);
+                        downloadImageBytes(client, imageView, urls, index + 1, characterName);
+                    }
+                })
+                .exceptionally(throwable -> {
+                    System.err.println("❌ Excepción descargando " + url + " para " + characterName + ": " + throwable.getMessage());
+                    throwable.printStackTrace();
+                    downloadImageBytes(client, imageView, urls, index + 1, characterName);
+                    return null;
+                });
         } catch (Exception e) {
+            System.err.println("❌ Error creando request para " + characterName + ": " + e.getMessage());
+            e.printStackTrace();
+            downloadImageBytes(client, imageView, urls, index + 1, characterName);
         }
+    }
+
+    private String bytesToHex(byte[] bytes, int offset, int length) {
+        StringBuilder sb = new StringBuilder();
+        for (int inc = offset; inc < Math.min(offset + length, bytes.length); inc++){
+            sb.append(String.format("%02X", bytes[inc]));
+        }
+        return sb.toString().trim();
     }
 
 }

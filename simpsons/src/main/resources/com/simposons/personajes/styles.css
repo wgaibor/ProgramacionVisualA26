@@ -249,3 +249,8 @@
     -fx-padding: 20;
     -fx-alignment: center;
 }
+
+.characters-grid {
+    -fx-background-color: transparent;
+    -fx-alignment: center;
+}

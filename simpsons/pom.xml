@@ -20,6 +20,11 @@
             <artifactId>javafx-fxml</artifactId>
             <version>13</version>
         </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>17.0.2</version>
+        </dependency>
         <!-- Libreria para convertir un json a un objeto de clase java -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -32,6 +37,18 @@
             <artifactId>jackson-core</artifactId>
             <!-- Se recomienda usar siempre la última versión estable disponible -->
             <version>2.18.2</version> 
+        </dependency>
+
+        <!-- TwelveMonkeys ImageIO para soporte WebP -->
+        <dependency>
+            <groupId>com.twelvemonkeys.imageio</groupId>
+            <artifactId>imageio-webp</artifactId>
+            <version>3.10.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.twelvemonkeys.imageio</groupId>
+            <artifactId>imageio-core</artifactId>
+            <version>3.10.1</version>
         </dependency>
     </dependencies>
     <build>
