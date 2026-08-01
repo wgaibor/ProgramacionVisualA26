@@ -33,11 +33,11 @@
             <VBox spacing="10.0" styleClass="search-section">
                 <children>
                     <Label text="Buscar Personaje" styleClass="section-title" />
-                    <TextField promptText="Nombre del personaje..." styleClass="search-field"/>
+                    <TextField fx:id="searchField" promptText="Nombre del personaje..." styleClass="search-field"/>
                     <HBox spacing="10.0" alignment="CENTER">
                         <children>
-                            <Button text="🔍 Buscar" styleClass="action-button" HBox.hgrow="ALWAYS"/>
-                            <Button text=" 🎲 Aleatorio" styleClass="random-button"/>
+                            <Button text="🔍 Buscar" onAction="#searchCharacter" styleClass="action-button" HBox.hgrow="ALWAYS"/>
+                            <Button text=" 🎲 Aleatorio" onAction="#getRadomCharacter" styleClass="random-button"/>
                         </children>
                     </HBox>
                 </children>

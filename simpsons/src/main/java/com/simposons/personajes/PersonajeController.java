@@ -9,6 +9,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
@@ -21,9 +22,11 @@ import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
@@ -36,6 +39,7 @@ public class PersonajeController {
 
     @FXML private FlowPane charactersContainer;
     @FXML private ScrollPane scrollPane;
+    @FXML private TextField searchField;
     public static int currentPage = 1;
 
     SimpsonsService simpsonsService;
@@ -234,7 +238,40 @@ public class PersonajeController {
     }
 
     private void showCharacterDetails(Personaje character) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Detalles de "+ nonEmpty(character.getName(), "Personaje"));
+        alert.setHeaderText(nonEmpty(character.getName(), "Personaje"));
+
+        StringBuilder details = new StringBuilder();
+        details.append("ID:  ").append(character.getId()).append("\n");
+        details.append("Nombre: ").append(nonEmpty(character.getName(), "SIN NOMBRE")).append("\n");
+
+        if(character.getAge() > 0) {
+            details.append("Edad ").append(character.getAge()).append("\n");
+        }
+        if(character.getBirthdate() != null) {
+            details.append("Fecha de nacimiento: ").append(character.getBirthdate()).append("\n");
+        }
+        if(hasText(character.getGender())) {
+            details.append("Genero: ").append(character.getGender()).append("\n");
+        }
+        if(hasText(character.getOccupation())) {
+            details.append("Ocupacion: ").append(character.getOccupation()).append("\n");
+        }
+        if(hasText(character.getStatus())) {
+            details.append("Estado: ").append(character.getStatus()).append("\n");
+        }
+        if(character.getPhrases() != null && character.getPhrases().length > 0) {
+            details.append("\n Frases famosas \n");
+            for(String phrase: character.getPhrases()) {
+                if(hasText(phrase)) {
+                    details.append("- ").append(phrase).append("\n");
+                }
+            }
+        }
+
+        alert.setContentText(details.toString());
+        alert.showAndWait();
     }
 
     // MÉTODO COMPLETO - NO MODIFICAR
@@ -408,4 +445,56 @@ public class PersonajeController {
         return sb.toString().trim();
     }
 
+    @FXML
+    private void searchCharacter() {
+        String searchText = searchField.getText();
+        if(!hasText(searchText)) {
+            showAlert("Error", "Por favor ingresa el nombre de un personaje");
+        }
+
+        clearCharacterContainer();
+        showLoadingIndicator();
+
+        Personaje foundCharacter = currentCharactersLists.stream()
+                                        .filter(character -> character.getName() != null &&
+                                            character.getName().toLowerCase().contains(searchText.trim().toLowerCase()))
+                                        .findFirst()
+                                        .orElse(null);
+
+        hideLoadingIndicator();
+        clearCharacterContainer();
+
+        if(foundCharacter != null) {
+            displayCharacter(foundCharacter);
+        } else {
+            showAlert("Informacion", "Personaje no encontrado en la lista actual. Intenta cargar mas personajes o busca por ID");
+        }
+    }
+
+    @FXML
+    private void getRadomCharacter(){
+        clearCharacterContainer();
+        showLoadingIndicator();
+
+        Task<Personaje> ramdonTask = new Task<>() {
+            @Override
+            protected Personaje call() throws Exception {
+                int randomId = new Random().nextInt(1182) + 1;
+                return simpsonsService.getCharacterById(randomId).get();
+            }
+            
+        };
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void clearCharacterContainer() {
+        charactersContainer.getChildren().clear();
+    }
 }
