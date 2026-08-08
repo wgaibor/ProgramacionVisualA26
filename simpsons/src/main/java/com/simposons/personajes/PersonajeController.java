@@ -40,7 +40,11 @@ public class PersonajeController {
     @FXML private FlowPane charactersContainer;
     @FXML private ScrollPane scrollPane;
     @FXML private TextField searchField;
+    @FXML private Button loadMoreButton;
     public static int currentPage = 1;
+
+    private boolean isLoading = false;
+    private boolean hasMorePage = true;
 
     SimpsonsService simpsonsService;
     List<Personaje> currentCharactersLists;
@@ -70,7 +74,13 @@ public class PersonajeController {
         loadMoreCharacters();
     }
 
+    @FXML
     private void loadMoreCharacters() {
+        if(isLoading || !hasMorePage) {
+            return;
+        }
+        isLoading = true;
+        loadMoreButton.setDisable(true);
         showLoadingIndicator();
         Task<SimpsonsResponse> loadTask = new Task<>() {
 
@@ -83,17 +93,29 @@ public class PersonajeController {
 
         loadTask.setOnSucceeded(exito -> {
             hideLoadingIndicator();
+            isLoading = false;
+
             SimpsonsResponse response = loadTask.getValue();
             List<Personaje> newCharacters = response != null ? response.getResults() : null;
 
             if(newCharacters != null && !newCharacters.isEmpty()) {
                 currentCharactersLists.addAll(newCharacters);
                 newCharacters.forEach(this::displayCharacter);
+                currentPage++;
+            }
+
+            hasMorePage = response != null && response.getNext() != null && !response.getNext().isBlank();
+            loadMoreButton.setDisable(!hasMorePage);
+            if(!hasMorePage) {
+                loadMoreButton.setText("No hay mas personajes");
             }
         });
 
         loadTask.setOnFailed(error -> {
-            System.out.println("Fallo el consumo de webservices");
+            hideLoadingIndicator();
+            isLoading = false;
+            loadMoreButton.setDisable(false);
+            showAlert("Error", "Hubo un problema al momento de consumir el ws");
         });
 
         Thread thread = new Thread(loadTask);
@@ -482,8 +504,31 @@ public class PersonajeController {
                 int randomId = new Random().nextInt(1182) + 1;
                 return simpsonsService.getCharacterById(randomId).get();
             }
-            
         };
+
+        ramdonTask.setOnSucceeded(exitoso -> {
+            hideLoadingIndicator();
+            clearCharacterContainer();
+
+            Personaje character = ramdonTask.getValue();
+            if(character != null) {
+                currentCharactersLists.clear();
+                currentCharactersLists.add(character);
+                displayCharacter(character);
+            } else {
+                showAlert("Error", "No se pudo obtener un personaje aleatorio");
+            }
+        });
+
+        ramdonTask.setOnFailed(error -> {
+            hideLoadingIndicator();
+            clearCharacterContainer();
+            showAlert("Error", "Problemas de conexion");
+        });
+
+        Thread thread = new Thread(ramdonTask);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void showAlert(String title, String message) {
@@ -497,4 +542,5 @@ public class PersonajeController {
     private void clearCharacterContainer() {
         charactersContainer.getChildren().clear();
     }
+
 }

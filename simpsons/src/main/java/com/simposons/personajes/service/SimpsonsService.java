@@ -52,6 +52,7 @@ public class SimpsonsService {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String url = BASE_URL + "/characters/" + id;
+                System.out.println(url);
                 HttpRequest request = HttpRequest.newBuilder()
                                         .uri(URI.create(url))
                                         .GET()

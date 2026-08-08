@@ -71,7 +71,7 @@
                 <children>
                     <Label text="Personajes de Los Simpsons" styleClass="main-title"/>
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button text="➕ Cargar Más" styleClass="load-button"/>
+                    <Button fx:id="loadMoreButton" text="➕ Cargar Más" onAction="#loadMoreCharacters" styleClass="load-button"/>
                 </children>
                 <padding>
                     <Insets left="30.0" right="30.0" top="20.0" bottom='20.0' />
